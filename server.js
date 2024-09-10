@@ -3,11 +3,26 @@ const app = express();
 const http = require('http');
 const {Server} = require('socket.io');
 const ACTIONS = require('./src/Actions');
+const path = require('path');
 
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: '*',
+    }
+});
 
+// for deployment purposes
+app.use(express.static('build'));
+app.use((req, res, next) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+})
+
+// create a new object to mapping userName with their soket id
+// For production we have to store this object in some database or any where
 const userSocketMap = {};
+
+
 function getAllConnectedClients(roomId){
     //Map
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(
@@ -58,5 +73,5 @@ io.on('connection', (socket) =>{
 
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 2000;
 server.listen( PORT, () => console.log(`Listening on ${PORT}`) );
